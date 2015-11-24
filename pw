@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -eo pipefail
 IFS=$'\n\t'
 
 # Dependencies:
@@ -12,22 +12,51 @@ IFS=$'\n\t'
 # source pw_autocomplete.sh in .bashrc
 
 PASSWORDS_PATH=$HOME/.passwords
-FILE=$PASSWORDS_PATH/$1
 
-CONTENTS=$(gpg2 --decrypt $FILE)
+if [ $# -eq 0 ]; then
+  echo "Usage: `basename $0` [file]"
+  echo "  --change-password     change password and re-encrypt all files"
+  exit 0
+fi
 
-function find_value() {
-  prefix=$1
-  value=$(echo -e "$CONTENTS" | grep -e $prefix)
-  value="${value/$prefix/}"
-  echo -n $value
-}
+if [ "$1" == "--change-password" ]; then
+  read -r -s -p "Enter new password: " new_password
+  echo
+  read -r -s -p "Confirm new password: " confirm_password
+  echo
 
-read -n1 -r -s key
-if [ "$key" == "u" ]; then
-  echo Copied username to clipboard...
-  echo -n $(find_value "u: ") | xclip -selection c
-elif [ "$key" == "p" ]; then
-  echo Copied password to clipboard...
-  echo -n $(find_value "p: ") | xclip -selection c
+  if [ "$confirm_password" != "$new_password" ]; then
+    echo You entered two different passwords!
+    exit 1
+  fi
+
+  touch /tmp/passphrase
+  chmod 600 /tmp/passphrase
+  echo -n $new_password > /tmp/passphrase
+  files=$(find $PASSWORDS_PATH -type f -printf "%p\n")
+  for file in $files; do
+    echo $file
+    mv $file $file.bak
+    gpg2 --decrypt $file.bak | gpg2 --batch --passphrase-fd 3 --symmetric --output $file 3</tmp/passphrase
+  done
+  rm /tmp/passphrase
+else
+  FILE=$PASSWORDS_PATH/$1
+  CONTENTS=$(gpg2 --decrypt $FILE)
+
+  function find_value() {
+    prefix=$1
+    value=$(echo -e "$CONTENTS" | grep -e $prefix)
+    value="${value/$prefix/}"
+    echo -n $value
+  }
+
+  read -n1 -r -s key
+  if [ "$key" == "u" ]; then
+    echo Copied username to clipboard...
+    echo -n $(find_value "u: ") | xclip -selection c
+  elif [ "$key" == "p" ]; then
+    echo Copied password to clipboard...
+    echo -n $(find_value "p: ") | xclip -selection c
+  fi
 fi
