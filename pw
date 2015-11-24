@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+set -euo pipefail
+IFS=$'\n\t'
+
+# Dependencies:
+# sudo apt-get install gnupg-agent
+# sudo apt-get install gnupg2
+
+# Add this to .bash_profile or .profile:
+# eval $(gpg-agent --daemon)
+
+# source pw_autocomplete.sh in .bashrc
+
+PASSWORDS_PATH=$HOME/.passwords
+FILE=$PASSWORDS_PATH/$1
+
+CONTENTS=$(gpg2 --decrypt $FILE)
+
+function find_value() {
+  prefix=$1
+  value=$(echo -e "$CONTENTS" | grep -e $prefix)
+  value="${value/$prefix/}"
+  echo -n $value
+}
+
+read -n1 -r -s key
+if [ "$key" == "u" ]; then
+  echo Copied username to clipboard...
+  echo -n $(find_value "u: ") | xclip -selection c
+elif [ "$key" == "p" ]; then
+  echo Copied password to clipboard...
+  echo -n $(find_value "p: ") | xclip -selection c
+fi
