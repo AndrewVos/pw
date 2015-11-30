@@ -30,27 +30,8 @@ if [ ! -f $PASSWORDS_FILE ]; then
 fi
 
 if [ "$1" == "--change-password" ]; then
-  echo "not implemented"
-  # read -r -s -p "Enter new password: " new_password
-  # echo
-  # read -r -s -p "Confirm new password: " confirm_password
-  # echo
-
-  # if [ "$confirm_password" != "$new_password" ]; then
-  #   echo You entered two different passwords!
-  #   exit 1
-  # fi
-
-  # touch /tmp/passphrase
-  # chmod 600 /tmp/passphrase
-  # echo -n $new_password > /tmp/passphrase
-  # files=$(find $PW_PATH -type f -printf "%p\n")
-  # for file in $files; do
-  #   echo $file
-  #   mv $file $file.bak
-  #   gpg2 --decrypt $file.bak | gpg2 --batch --passphrase-fd 3 --symmetric --output $file 3</tmp/passphrase
-  # done
-  # rm /tmp/passphrase
+  gpg2 --quiet --decrypt $PASSWORDS_FILE | gpg2 --cipher-algo AES256 --output $PASSWORDS_FILE.new --symmetric
+  mv $PASSWORDS_FILE.new $PASSWORDS_FILE
 else
   SEARCH=$1
 
@@ -74,7 +55,7 @@ else
 	PASSWORD=""
       fi
     fi
-  done < <(gpg2 --decrypt $PASSWORDS_FILE )
+  done < <(gpg2 --quiet --decrypt $PASSWORDS_FILE )
 
   echo "Press [u] to copy username or [p] to copy password"
   echo "site     = $SITE"
