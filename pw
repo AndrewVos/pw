@@ -33,7 +33,7 @@ if [ "$1" == "--change-password" ]; then
   gpg2 --quiet --decrypt $PASSWORDS_FILE | gpg2 --cipher-algo AES256 --output $PASSWORDS_FILE.new --symmetric
   mv $PASSWORDS_FILE.new $PASSWORDS_FILE
 else
-  SEARCH=$1
+  SEARCH="$@"
 
   SITE=""
   USERNAME=""
