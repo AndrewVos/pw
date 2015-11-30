@@ -16,7 +16,7 @@ if [ "$SHELL" = "/bin/bash" ]; then
     lines="${lines//s: /}"
     lines=$(echo "$lines" | grep -e "$word")
 
-    COMPREPLY=( $(compgen -W "${lines}") )
+    COMPREPLY=( $(compgen -W "--change-password ${lines}") )
 
     return 0
   }
