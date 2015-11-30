@@ -2,37 +2,31 @@
 set -eo pipefail
 IFS=$'\n\t'
 
-# Dependencies:
-# sudo apt-get install gnupg-agent
-# sudo apt-get install gnupg2
-
-# Add this to .bash_profile or .profile:
-# eval $(gpg-agent --daemon)
-# source pw_autocomplete.sh in .bashrc
-
-# Getting started
-# touch passwords.txt
-# mkdir -p ~/.passwords
-# gpg --cipher-algo AES256 --output ~/.passwords/passwords.gpg --symmetric passwords.txt
-
-PW_PATH=$HOME/.passwords
-PASSWORDS_FILE=$PW_PATH/passwords.gpg
+PASSWORDS_FILE=$HOME/passwords.gpg
 
 if [ $# -eq 0 ]; then
   echo "Usage: `basename $0` [file]"
-  echo "  --change-password     change password and re-encrypt all files"
+  echo "  --change-password          change password and re-encrypt password file"
+  echo "  --create-password-file     create a new password file"
   exit 0
 fi
 
-if [ ! -f $PASSWORDS_FILE ]; then
-  echo "$HOME/.passwords/passwords.gpg does not exist..."
-  exit 0
-fi
+function ensure_passwords_file_exists() {
+  if [ ! -f $PASSWORDS_FILE ]; then
+    echo "$HOME/.passwords/passwords.gpg does not exist..."
+    exit 0
+  fi
+}
 
 if [ "$1" == "--change-password" ]; then
+  ensure_passwords_file_exists
   gpg2 --quiet --decrypt $PASSWORDS_FILE | gpg2 --cipher-algo AES256 --output $PASSWORDS_FILE.new --symmetric
   mv $PASSWORDS_FILE.new $PASSWORDS_FILE
+elif [ "$1" == "--create-password-file" ]; then
+  echo "" | gpg2 --cipher-algo AES256 --output $PASSWORDS_FILE --symmetric
 else
+  ensure_passwords_file_exists
+
   SEARCH="$@"
 
   SITE=""

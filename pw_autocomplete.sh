@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 IFS=$'\n\t'
 
-PW_PATH=$HOME/.passwords
-PASSWORDS_FILE=$PW_PATH/passwords.gpg
+PASSWORDS_FILE=$HOME/passwords.gpg
 
 if [ "$SHELL" = "/bin/bash" ]; then
   function _complete_pw() {
     if [ ! -f $PASSWORDS_FILE ]; then
+      COMPREPLY+=(--create-password-file)
       return 0
     fi
 
@@ -16,7 +16,9 @@ if [ "$SHELL" = "/bin/bash" ]; then
     lines="${lines//s: /}"
     lines=$(echo "$lines" | grep -e "$word")
 
-    COMPREPLY=( $(compgen -W "--change-password ${lines}") )
+    COMPREPLY=( $(compgen -W "${lines}") )
+    COMPREPLY+=(--change-password)
+    COMPREPLY+=(--create-password-file)
 
     return 0
   }
