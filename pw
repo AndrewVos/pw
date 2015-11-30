@@ -16,10 +16,16 @@ IFS=$'\n\t'
 # gpg --cipher-algo AES256 --output ~/.passwords/passwords.gpg --symmetric passwords.txt
 
 PW_PATH=$HOME/.passwords
+PASSWORDS_FILE=$PW_PATH/passwords.gpg
 
 if [ $# -eq 0 ]; then
   echo "Usage: `basename $0` [file]"
   echo "  --change-password     change password and re-encrypt all files"
+  exit 0
+fi
+
+if [ ! -f $PASSWORDS_FILE ]; then
+  echo "$HOME/.passwords/passwords.gpg does not exist..."
   exit 0
 fi
 
@@ -47,7 +53,6 @@ if [ "$1" == "--change-password" ]; then
   # rm /tmp/passphrase
 else
   SEARCH=$1
-  FILE=$PW_PATH/passwords.gpg
 
   SITE=""
   USERNAME=""
@@ -69,7 +74,7 @@ else
 	PASSWORD=""
       fi
     fi
-  done < <(gpg2 --decrypt $FILE )
+  done < <(gpg2 --decrypt $PASSWORDS_FILE )
 
   echo "Press [u] to copy username or [p] to copy password"
   echo "site     = $SITE"
