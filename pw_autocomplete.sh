@@ -1,16 +1,20 @@
 #!/usr/bin/env bash
-# set -euo pipefail
-# IFS=$'\n\t'
+IFS=$'\n\t'
 
-PASSWORDS_PATH=$HOME/.passwords
+PW_PATH=$HOME/.passwords
+PASSWORDS_FILE=$PW_PATH/passwords.gpg
 
 if [ "$SHELL" = "/bin/bash" ]; then
   function _complete_pw() {
-    local curw=${COMP_WORDS[COMP_CWORD]}
-    local wordlist=$(find $PASSWORDS_PATH -type f -printf "%P\n")
-    COMPREPLY=($(compgen -W '${wordlist[@]}' -- "$curw"))
+    local word=${COMP_WORDS[COMP_CWORD]}
+
+    lines="$(gpg2 --decrypt --quiet $PASSWORDS_FILE | grep "s: ")"
+    lines="${lines//s: /}"
+    lines=$(echo "$lines" | grep "$word")
+
+    COMPREPLY=( $(compgen -W "${lines}") )
+
     return 0
   }
   complete -F _complete_pw pw
 fi
-

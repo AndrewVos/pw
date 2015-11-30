@@ -8,10 +8,14 @@ IFS=$'\n\t'
 
 # Add this to .bash_profile or .profile:
 # eval $(gpg-agent --daemon)
-
 # source pw_autocomplete.sh in .bashrc
 
-PASSWORDS_PATH=$HOME/.passwords
+# Getting started
+# touch passwords.txt
+# mkdir -p ~/.passwords
+# gpg --cipher-algo AES256 --output ~/.passwords/passwords.gpg --symmetric passwords.txt
+
+PW_PATH=$HOME/.passwords
 
 if [ $# -eq 0 ]; then
   echo "Usage: `basename $0` [file]"
@@ -20,43 +24,66 @@ if [ $# -eq 0 ]; then
 fi
 
 if [ "$1" == "--change-password" ]; then
-  read -r -s -p "Enter new password: " new_password
-  echo
-  read -r -s -p "Confirm new password: " confirm_password
-  echo
+  echo "not implemented"
+  # read -r -s -p "Enter new password: " new_password
+  # echo
+  # read -r -s -p "Confirm new password: " confirm_password
+  # echo
 
-  if [ "$confirm_password" != "$new_password" ]; then
-    echo You entered two different passwords!
-    exit 1
-  fi
+  # if [ "$confirm_password" != "$new_password" ]; then
+  #   echo You entered two different passwords!
+  #   exit 1
+  # fi
 
-  touch /tmp/passphrase
-  chmod 600 /tmp/passphrase
-  echo -n $new_password > /tmp/passphrase
-  files=$(find $PASSWORDS_PATH -type f -printf "%p\n")
-  for file in $files; do
-    echo $file
-    mv $file $file.bak
-    gpg2 --decrypt $file.bak | gpg2 --batch --passphrase-fd 3 --symmetric --output $file 3</tmp/passphrase
-  done
-  rm /tmp/passphrase
+  # touch /tmp/passphrase
+  # chmod 600 /tmp/passphrase
+  # echo -n $new_password > /tmp/passphrase
+  # files=$(find $PW_PATH -type f -printf "%p\n")
+  # for file in $files; do
+  #   echo $file
+  #   mv $file $file.bak
+  #   gpg2 --decrypt $file.bak | gpg2 --batch --passphrase-fd 3 --symmetric --output $file 3</tmp/passphrase
+  # done
+  # rm /tmp/passphrase
 else
-  FILE=$PASSWORDS_PATH/$1
-  CONTENTS=$(gpg2 --decrypt $FILE)
+  SEARCH=$1
+  FILE=$PW_PATH/passwords.gpg
 
-  function find_value() {
-    prefix=$1
-    value=$(echo -e "$CONTENTS" | grep -e $prefix)
-    value="${value/$prefix/}"
-    echo -n $value
-  }
+  SITE=""
+  USERNAME=""
+  PASSWORD=""
 
+  while read line; do
+    if [[ "$line" == s:* ]]; then
+      SITE=${line#s: }
+    elif [[ "$line" == u:* ]]; then
+      USERNAME=${line#u: }
+    elif [[ "$line" == p:* ]]; then
+      PASSWORD=${line#p: }
+    else
+      if [[ "$SITE" =~ $SEARCH ]]; then
+	break
+      else
+	SITE=""
+	USERNAME=""
+	PASSWORD=""
+      fi
+    fi
+  done < <(gpg2 --decrypt $FILE )
+
+  echo "Press [u] to copy username or [p] to copy password"
+  echo "site     = $SITE"
+  echo "username = $USERNAME"
+  echo "password = *****"
   read -n1 -r -s key
   if [ "$key" == "u" ]; then
     echo Copied username to clipboard...
-    echo -n $(find_value "u: ") | xclip -selection c
+    echo -n $USERNAME | xclip -selection c
   elif [ "$key" == "p" ]; then
     echo Copied password to clipboard...
-    echo -n $(find_value "p: ") | xclip -selection c
+    echo -n $PASSWORD | xclip -selection c
   fi
+  exit 0
+
+  echo SITE:$SITE
 fi
