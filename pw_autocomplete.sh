@@ -14,7 +14,7 @@ if [ "$SHELL" = "/bin/bash" ]; then
 
     lines="$(gpg2 --decrypt --quiet $PASSWORDS_FILE | grep "s: ")"
     lines="${lines//s: /}"
-    lines=$(echo "$lines" | grep "$word")
+    lines=$(echo "$lines" | grep -e "$word")
 
     COMPREPLY=( $(compgen -W "${lines}") )
 
