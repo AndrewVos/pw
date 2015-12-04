@@ -64,6 +64,4 @@ else
     echo -n $PASSWORD | xclip -selection c
   fi
   exit 0
-
-  echo SITE:$SITE
 fi

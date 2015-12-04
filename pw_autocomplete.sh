@@ -14,11 +14,10 @@ if [ "$SHELL" = "/bin/bash" ]; then
 
     lines="$(gpg2 --decrypt --quiet $PASSWORDS_FILE | grep "s: ")"
     lines="${lines//s: /}"
+    lines=$(printf "$lines\n--change-password\n--create-password-file")
     lines=$(echo "$lines" | grep -e "$word")
 
     COMPREPLY=( $(compgen -W "${lines}") )
-    COMPREPLY+=(--change-password)
-    COMPREPLY+=(--create-password-file)
 
     return 0
   }
